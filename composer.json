@@ -8,7 +8,7 @@
     "require": {
         "php": ">=5.5.0",
         "roundcube/plugin-installer": "~0.3.0",
-        "google/apiclient": "1.1.8"
+        "google/apiclient": "2.12.1"
     },
     "extra": {
         "roundcube": {
