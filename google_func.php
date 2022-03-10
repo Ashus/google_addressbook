@@ -237,7 +237,7 @@ class google_func
         } catch (GuzzleException $e) {
         }
         if ($response->getStatusCode() == 200) {
-          $record['photo'] = $response->getBody();
+          $record['photo'] = $response->getBody()->getContents();
         }
       }
 
