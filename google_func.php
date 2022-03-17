@@ -179,13 +179,18 @@ class google_func
             $persons = array_merge($persons, $connections);
         }
     } catch (\Google\Service\Exception $e) {
-        switch ($e->error->code) {
+        $message = json_decode($e->getMessage());
+        $error = trim($message->error_description, '.');
+        switch ($e->getCode()) {
             case 401:
                 return array('success' => false, 'message' => $rcmail->gettext('googleauthfailed', 'google_addressbook'));
             case 403:
                 return array('success' => false, 'message' => $rcmail->gettext('googleforbidden', 'google_addressbook'));
             default:
-                return array('success' => false, 'message' => $rcmail->gettext('googleunreachable', 'google_addressbook'));
+                return array('success' => false, 'message' => $rcmail->gettext(
+                    ['name' => 'googleunreachable', 'vars' => ['error' => $error]],
+                    'google_addressbook'
+                ));
         }
     }
 

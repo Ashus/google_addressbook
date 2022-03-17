@@ -12,5 +12,5 @@ $messages = array();
 $messages['done'] = 'Zrobione.';
 $messages['contactsfound'] = ' znalezione kontakty.';
 $messages['noauthcode'] = 'Pobranie kodu autoryzacyjnego niemożliwe z powodu błędu uwierzytelniania.';
-$messages['googleunreachable'] = 'Niemożliwe uzyskanie dostępu do usług Google. Spróbuj później.';
+$messages['googleunreachable'] = 'Niemożliwe uzyskanie dostępu do usług Google: $error. Spróbuj później.';
 $messages['googleforbidden'] = 'Błąd uwierzytelniania!';
