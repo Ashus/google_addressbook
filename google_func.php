@@ -207,12 +207,12 @@ class google_func
       $record = array();
       $name = reset($person->names);
       //write_log('google_addressbook', 'getting contact: ' . $name->displayName);
-      $record['name'] = trim($name->displayName);
-      $record['firstname'] = trim($name->givenName);
-      $record['surname'] = trim($name->familyName);
-      $record['middlename'] = trim($name->middleName);
-      $record['prefix'] = $name->honorificPrefix;
-      $record['suffix'] = $name->honorificSuffix;
+      $record['name'] = trim($name->displayName ?? '');
+      $record['firstname'] = trim($name->givenName ?? '');
+      $record['surname'] = trim($name->familyName ?? '');
+      $record['middlename'] = trim($name->middleName ?? '');
+      $record['prefix'] = $name->honorificPrefix ?? '';
+      $record['suffix'] = $name->honorificSuffix ?? '';
 
       if (isset($person->emailAddresses) && !empty($person->emailAddresses)) {
         foreach ($person->emailAddresses as $email) {
