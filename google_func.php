@@ -9,7 +9,6 @@
 
 require_once(dirname(__FILE__) . '/../../vendor/autoload.php');
 require_once(dirname(__FILE__) . '/google_addressbook_backend.php');
-require_once(dirname(__FILE__) . '/xml_utils.php');
 
 class google_func
 {
@@ -23,10 +22,11 @@ class google_func
     $config = rcmail::get_instance()->config;
     $client = new Google_Client();
     $client->setApplicationName($config->get('google_addressbook_application_name'));
-    $client->setScopes(['https://www.googleapis.com/auth/contacts.readonly']);
+    $client->setScopes([\Google\Service\PeopleService::CONTACTS_READONLY]);
     $client->setClientId($config->get('google_addressbook_client_id'));
     $client->setClientSecret($config->get('google_addressbook_client_secret'));
     $client->setAccessType('offline');
+    $client->setApprovalPrompt('force');
     if (google_func::has_redirect()){
         $redirect_url = $config->get('google_addressbook_client_redirect_url');
         if ($redirect_url === null){
@@ -37,6 +37,11 @@ class google_func
     }
     $client->setRedirectUri($redirect_url);
     return $client;
+  }
+
+  static function get_service(Google_Client $client)
+  {
+    return new \Google\Service\PeopleService($client);
   }
 
   static function has_redirect(){
@@ -103,7 +108,8 @@ class google_func
     $msg = '';
 
     try {
-      if($client->getAccessToken() === null || $client->getAccessToken() == '[]') {
+      $token = $client->getAccessToken();
+      if (empty($token)) {
         $code = google_func::get_auth_code($user);
         if(empty($code)) {
           throw new Exception($rcmail->gettext('noauthcode', 'google_addressbook'));
@@ -112,12 +118,11 @@ class google_func
         $msg = $rcmail->gettext('done', 'google_addressbook');
         $success = true;
       } else if($client->isAccessTokenExpired()) {
-        $token = json_decode($client->getAccessToken());
-        if(empty($token->refresh_token)) {
+        if(empty($token['refresh_token'])) {
           throw new Exception("Error fetching refresh token.");
           // this only happens if google client id is wrong and access type != offline
         } else {
-          $client->refreshToken($token->refresh_token);
+          $client->refreshToken($token['refresh_token']);
           $msg = $rcmail->gettext('done', 'google_addressbook');
           $success = true;
         }
@@ -154,92 +159,90 @@ class google_func
       return $auth_res;
     }
 
-    $feed = 'https://www.google.com/m8/feeds/groups/default/full'.'?v=3.0';
-    $val = $client->getAuth()->authenticatedRequest(new Google_Http_Request($feed));
-    if($val->getResponseHttpCode() == 401) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleauthfailed', 'google_addressbook'));
-    } else if($val->getResponseHttpCode() == 403) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleforbidden', 'google_addressbook'));
-    } else if($val->getResponseHttpCode() != 200) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleunreachable', 'google_addressbook'));
-    }
+    $service = google_func::get_service($client);
 
-    $xml = xml_utils::xmlstr_to_array($val->getResponseBody());
-    $gid = $xml['entry'][0]['id'][0]['@text'];
+    $optParams = [
+        'personFields' => 'names,emailAddresses,phoneNumbers,photos',
+        'pageSize' => 100,
+    ];
 
-    $feed = 'https://www.google.com/m8/feeds/contacts/default/full'.'?max-results=9999'.'&v=3.0'.'&group='.urlencode($gid);
-    $val = $client->getAuth()->authenticatedRequest(new Google_Http_Request($feed));
-    if($val->getResponseHttpCode() == 401) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleauthfailed', 'google_addressbook'));
-    } else if($val->getResponseHttpCode() == 403) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleforbidden', 'google_addressbook'));
-    } else if($val->getResponseHttpCode() != 200) {
-      return array('success' => false, 'message' => $rcmail->gettext('googleunreachable', 'google_addressbook'));
-    }
-
-    $xml = xml_utils::xmlstr_to_array($val->getResponseBody());
-
-    if(is_null($xml['entry'])) {
-      // When the user does not have any google contacts. Avoids PHP Warning in foreach.
-      return array('success' => true, 'message' => '0'.$rcmail->gettext('contactsfound', 'google_addressbook'));
+    $persons = array();
+    try {
+        $nextPageToken = -1;
+        while (!empty($nextPageToken)) {
+            if ($nextPageToken !== -1) {
+                $optParams['pageToken'] = $nextPageToken;
+            }
+            $response = $service->people_connections->listPeopleConnections('people/me', $optParams);
+            $nextPageToken = $response->getNextPageToken();
+            $connections = $response->getConnections();
+            $persons = array_merge($persons, $connections);
+        }
+    } catch (\Google\Service\Exception $e) {
+        $message = json_decode($e->getMessage());
+        $error = trim($message->error_description, '.');
+        switch ($e->getCode()) {
+            case 401:
+                return array('success' => false, 'message' => $rcmail->gettext('googleauthfailed', 'google_addressbook'));
+            case 403:
+                return array('success' => false, 'message' => $rcmail->gettext('googleforbidden', 'google_addressbook'));
+            default:
+                return array('success' => false, 'message' => $rcmail->gettext(
+                    ['name' => 'googleunreachable', 'vars' => ['error' => $error]],
+                    'google_addressbook'
+                ));
+        }
     }
 
     $backend = new google_addressbook_backend($rcmail->get_dbh(), $user->ID);
     $backend->delete_all();
 
+    if (empty($persons)) {
+      // When the user does not have any google contacts. Avoids PHP Warning in foreach.
+      return array('success' => true, 'message' => '0' . $rcmail->gettext('contactsfound', 'google_addressbook'));
+    }
+
     $num_entries = 0;
-    foreach($xml['entry'] as $entry) {
-      //write_log('google_addressbook', 'getting contact: '.$entry['title'][0]['@text']);
+    foreach ($persons as $person) {
       $record = array();
-      $name = $entry['gd:name'][0];
-      $record['name']= trim($name['gd:fullName'][0]['@text']);
-      $record['firstname'] = trim($name['gd:givenName'][0]['@text']);
-      $record['surname'] = trim($name['gd:familyName'][0]['@text']);
-      $record['middlename'] = trim($name['gd:additionalName'][0]['@text']);
-      $record['prefix'] = $name['gd:namePrefix'][0]['@text'];
-      $record['suffix'] = $name['gd:nameSuffix'][0]['@text'];
-      if(empty($record['name'])) {
-        $record['name'] = $entry['title'][0]['@text'];
-      }
+      $name = reset($person->names);
+      //write_log('google_addressbook', 'getting contact: ' . $name->displayName);
+      $record['name'] = trim($name->displayName ?? '');
+      $record['firstname'] = trim($name->givenName ?? '');
+      $record['surname'] = trim($name->familyName ?? '');
+      $record['middlename'] = trim($name->middleName ?? '');
+      $record['prefix'] = $name->honorificPrefix ?? '';
+      $record['suffix'] = $name->honorificSuffix ?? '';
 
-      if(empty($record['name']) &&
-         empty($record['firstname']) &&
-         empty($record['surname']) &&
-         empty($record['middlename']) &&
-         !array_key_exists('gd:email', $entry)) {
-          continue;
-      }
-
-      if(array_key_exists('gd:email', $entry)) {
-        foreach($entry['gd:email'] as $email) {
-          list($rel, $type) = explode('#', $email['@attributes']['rel'], 2);
-          $type = empty($type) ? '' : ':'.$type;
-          $record['email'.$type][] = $email['@attributes']['address'];
-        }
-      }
-
-      if(array_key_exists('gd:phoneNumber', $entry)) {
-        foreach($entry['gd:phoneNumber'] as $phone) {
-          list($rel, $type) = explode('#', $phone['@attributes']['rel'], 2);
-          $type = empty($type) ? '' : ':'.$type;
-          $record['phone'.$type][] = $phone['@text'];
-        }
-      }
-
-      if(array_key_exists('link', $entry)) {
-        foreach($entry['link'] as $link) {
-          $rel = $link['@attributes']['rel'];
-          $href = $link['@attributes']['href'];
-          if($rel == 'http://schemas.google.com/contacts/2008/rel#photo') {
-            // etag is only set if image is available
-            if(isset($link['@attributes']['etag'])) {
-              $resp = $client->getAuth()->authenticatedRequest(new Google_Http_Request($href));
-              if($resp->getResponseHttpCode() == 200) {
-                $record['photo'] = $resp->getResponseBody();
-              }
-            }
-            break;
+      if (isset($person->emailAddresses) && !empty($person->emailAddresses)) {
+        foreach ($person->emailAddresses as $email) {
+          $type = empty($email['type']) ? '' : ':' . $email['type'];
+          if (!isset($record['email' . $type])) {
+            $record['email' . $type] = array();
           }
+          $record['email' . $type][] = $email['value'];
+        }
+      }
+
+      if (isset($person->phoneNumbers) && !empty($person->phoneNumbers)) {
+        foreach ($person->phoneNumbers as $phone) {
+          $type = empty($phone['type']) ? '' : ':' . $phone['type'];
+          if (!isset($record['phone' . $type])) {
+            $record['phone' . $type] = array();
+          }
+          $record['phone' . $type][] = $phone['value'];
+        }
+      }
+
+      if (isset($person->photos) && !empty($person->photos)) {
+        $photo = reset($person->photos);
+        $photo_client = new \GuzzleHttp\Client();
+        try {
+          $response = $photo_client->request('GET', $photo['url']);
+        } catch (GuzzleException $e) {
+        }
+        if ($response->getStatusCode() == 200) {
+          $record['photo'] = $response->getBody()->getContents();
         }
       }
 
