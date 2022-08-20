@@ -1,7 +1,10 @@
 <?php
+
+// copy configuration below to Roundcube root /config/config.inc.php and modify it there
+
 $config['google_addressbook_application_name'] = 'rc-google-addressbook';
-$config['google_addressbook_client_id'] = '775403024003-e5m4h02j1hsgjj0dipef3ugbg8ee9emb.apps.googleusercontent.com';
-$config['google_addressbook_client_secret'] = 'HcRLtRTEGIqScjMpkREddO6L';
+$config['google_addressbook_client_id'] = '';
+$config['google_addressbook_client_secret'] = '';
 $config['google_addressbook_client_redirect'] = false;
 //if _redirect_url is not defined, it will autodetect when called trought web server.
 //if usage of cron is wanted, is needed to define it.

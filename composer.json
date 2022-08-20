@@ -6,9 +6,9 @@
     "homepage": "https://github.com/Ashus/google-addressbook",
     "license": "GPL-3.0+",
     "require": {
-        "php": ">=5.5.0",
-        "roundcube/plugin-installer": "~0.3.0",
-        "google/apiclient": "2.12.1"
+        "php": ">=5.6",
+        "roundcube/plugin-installer": "^0.3",
+        "google/apiclient": "^2.12"
     },
     "extra": {
         "roundcube": {

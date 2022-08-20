@@ -2,11 +2,11 @@
 
 This plugin lets you sync your Google Addressbook in readonly mode with Roundcube.
 
-*Info: Initially stwa created this plugin for Roundcube 0.8.5, but it is still working properly with the current version of Roundcube (version 1.2.0). So yes, you can still use this plugin, it's up to date!*
+*Info: Initially stwa created this plugin for Roundcube 0.8.5, but it is still working properly with the current version of Roundcube (version 1.6.0). So yes, you can still use this plugin, it's up to date!*
 
 ## Requirements
 * Roundcube >= v0.8.5 [http://roundcube.net/download]
-* PHP 5.5.x or higher [http://www.php.net/]
+* PHP 5.6 or higher [http://www.php.net/]
 * PHP Curl extension [http://www.php.net/manual/en/intro.curl.php]
 * PHP JSON extension [http://php.net/manual/en/book.json.php]
 
@@ -28,7 +28,8 @@ Just specify an entry like:
 (Every 4 hours in this example)
 
 ## Own Google Application
-You can register your plugin with Google to customize the application name that is presented to users when requesting access to contacts. For this, you have to register at https://console.developers.google.com/ and create a project for your roundcube installation. You get an application name, a client id and a secret. Ensure to allow redirect to `https://your-rc-base..../?_task=settings&_action=plugin.google_addressbook.auth` when you create the Web Application credential and also store this to `google_addressbook_client_redirect_url`. Alternatively you can create an Other credential, but then disable `google_addressbook_client_redirect`. Anyhow remember to enable Contacts API for that project. Put all these values in a file named `config.inc.php` inside the `plugins/google_addressbook` folder like this:
+You need to register your plugin with Google to customize the application name that is presented to users when requesting access to contacts. For this, you have to register at https://console.cloud.google.com/ and create a project for your roundcube installation. After enabling OAuth 2.0 Client ID credentials, you would get an application name, a client id and a secret. Ensure to allow redirect to `https://your-rc-base..../?_task=settings&_action=plugin.google_addressbook.auth` when you create the Web Application credential and also store this to `google_addressbook_client_redirect_url`. Alternatively you can create an Other credential, but then disable `google_addressbook_client_redirect`. Anyhow remember to enable 
+__Google People API__ for that project. Put all these values in a file named `config.inc.php` inside the `config` folder like this:
 ```
 <?php
 $config['google_addressbook_application_name'] = 'your-application-name';

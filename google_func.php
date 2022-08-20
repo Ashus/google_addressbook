@@ -7,8 +7,8 @@
  * @author Stefan L. Wagner
  */
 
-require_once(dirname(__FILE__) . '/../../vendor/autoload.php');
-require_once(dirname(__FILE__) . '/google_addressbook_backend.php');
+require_once(__DIR__ . '/../../vendor/autoload.php');
+require_once(__DIR__ . '/google_addressbook_backend.php');
 
 class google_func
 {

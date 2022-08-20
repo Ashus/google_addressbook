@@ -10,8 +10,8 @@
  * @url https://github.com/stwa/google-addressbook
  */
 
-require_once(dirname(__FILE__) . '/google_addressbook_backend.php');
-require_once(dirname(__FILE__) . '/google_func.php');
+require_once(__DIR__ . '/google_addressbook_backend.php');
+require_once(__DIR__ . '/google_func.php');
 
 class google_addressbook extends rcube_plugin
 {
@@ -24,8 +24,6 @@ class google_addressbook extends rcube_plugin
     $rcmail = rcmail::get_instance();
 
     $this->add_texts('localization/', true);
-    $this->load_config('config.inc.php.dist');
-    $this->load_config('config.inc.php');
 
     // register actions
     $this->register_action('plugin.google_addressbook.auth', array($this, 'handle_auth_requests'));
