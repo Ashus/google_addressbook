@@ -87,7 +87,7 @@ class google_func
   static function is_enabled($user)
   {
     $prefs = $user->get_prefs();
-    return (bool)$prefs[google_func::$settings_key_use_plugin];
+    return (bool)($prefs[google_func::$settings_key_use_plugin] ?? false);
   }
 
   static function is_autosync($user)
