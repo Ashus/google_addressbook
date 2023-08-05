@@ -1,3 +1,5 @@
 google-api-php-client/
 config.inc.php
+composer.lock
 .idea
+vendor/

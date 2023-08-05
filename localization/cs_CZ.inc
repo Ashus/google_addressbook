@@ -12,5 +12,7 @@ $messages = array();
 $messages['done'] = 'Hotovo.';
 $messages['contactsfound'] = ' kontakt(y) nalezeny.';
 $messages['noauthcode'] = 'Není autorizační kód. Ověření není možné.';
+$messages['googleauthfailed'] = 'Ověření uživatele selhalo.';
 $messages['googleunreachable'] = 'Google se zdá být nedostupný. Prosím zkuste to později.';
 $messages['googleforbidden'] = 'Chyba ověření!';
+$messages['invalidconfiguration'] = 'Konfigurace pluginu není dokončena. Prosím opravte to pomocí instalačního návodu.';

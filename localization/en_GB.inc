@@ -15,3 +15,4 @@ $messages['noauthcode'] = 'No auth code. Authentication not possible.';
 $messages['googleauthfailed'] = 'Authentication failed.';
 $messages['googleunreachable'] = 'Google seems to be unavailable. Please try again later.';
 $messages['googleforbidden'] = 'Authentication not allowed!';
+$messages['invalidconfiguration'] = 'Plugin configuration is incomplete. Please fix this according to the installation guide.';

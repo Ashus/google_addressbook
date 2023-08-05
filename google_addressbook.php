@@ -126,11 +126,15 @@ class google_addressbook extends rcube_plugin
           );
           $auth_link['target'] = '_blank';
       }
-      $auth_link['href'] = google_func::get_client()->createAuthUrl();
-      $params['blocks'][$this->ID]['options']['link'] = array(
-        'title' => html::span('', ''),
-        'content' => html::a($auth_link, $this->gettext('authcodelink'))
-      );
+        if (!google_func::get_client()->getClientId() || !google_func::get_client()->getClientSecret()) {
+            $params['blocks'][$this->ID]['options'][$field_id]['content'] = html::label('error', $this->gettext('invalidconfiguration'));
+        } else {
+          $auth_link['href'] = google_func::get_client()->createAuthUrl();
+          $params['blocks'][$this->ID]['options']['link'] = [
+              'title' => html::span('', ''),
+              'content' => html::a($auth_link, $this->gettext('authcodelink'))
+          ];
+      }
     }
     return $params;
   }

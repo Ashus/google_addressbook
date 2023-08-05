@@ -14,5 +14,10 @@
         "roundcube": {
             "sql-dir": "SQL"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "roundcube/plugin-installer": true
+        }
     }
 }
