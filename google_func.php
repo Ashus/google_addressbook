@@ -7,7 +7,6 @@
  * @author Stefan L. Wagner
  */
 
-require_once(__DIR__ . '/../../vendor/autoload.php');
 require_once(__DIR__ . '/google_addressbook_backend.php');
 
 class google_func
