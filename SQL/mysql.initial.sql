@@ -18,4 +18,6 @@ CREATE TABLE IF NOT EXISTS `contacts_google` (
  INDEX `user_contacts_google_index` (`user_id`,`del`)
 ) /*!40000 ENGINE=INNODB */ /*!40101 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 
+INSERT IGNORE INTO `system` SET `name` = 'google_addressbook-version', `value` = '2023080501';
+
 /*!40014 SET FOREIGN_KEY_CHECKS=1 */;

@@ -1,4 +1,5 @@
 -- TODO Add IF EXISTS table check, does anyone speak MSSQL? Please open pull request.
+-- TODO Add IF EXISTS row check in table system
 
 CREATE TABLE [dbo].[contacts_google] (
 	[contact_id] [int] IDENTITY (1, 1) NOT NULL ,
@@ -39,3 +40,5 @@ ALTER TABLE [dbo].[contacts_google] ADD CONSTRAINT [FK_contacts_google_user_id]
     FOREIGN KEY ([user_id]) REFERENCES [dbo].[users] ([user_id])
     ON DELETE CASCADE ON UPDATE CASCADE
 GO
+
+INSERT INTO [dbo].[system] ([name], [value]) VALUES ('google_addressbook-version', '2023080501');

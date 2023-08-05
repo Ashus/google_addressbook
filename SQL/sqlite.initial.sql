@@ -17,3 +17,4 @@ CREATE TABLE IF NOT EXISTS contacts_google (
 
 CREATE INDEX ix_contacts_google_user_id ON contacts_google(user_id, del);
 
+INSERT INTO `system` ([name], [value]) VALUES ('google_addressbook-version', '2023080501') ON CONFLICT DO NOTHING;
