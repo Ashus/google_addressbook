@@ -9,12 +9,14 @@
 
 require_once(__DIR__ . '/google_addressbook_backend.php');
 
-class google_func
+class google_addressbook_functions
 {
-    public static $settings_key_token = 'google_current_token';
-    public static $settings_key_use_plugin = 'google_use_addressbook';
-    public static $settings_key_auto_sync = 'google_autosync';
-    public static $settings_key_auth_code = 'google_auth_code';
+    const SETTINGS_KEY_TOKEN = 'google_current_token';
+    const SETTINGS_KEY_USE_PLUGIN = 'google_use_addressbook';
+    const SETTINGS_KEY_AUTO_SYNC = 'google_autosync';
+    const SETTINGS_KEY_AUTH_CODE = 'google_auth_code';
+
+    const LOG_IDENT = 'google_addressbook';
 
     static function get_client(): \Google\Client
     {
@@ -57,7 +59,7 @@ class google_func
     static function get_auth_code(rcube_user $user)
     {
         $prefs = $user->get_prefs();
-        return $prefs[self::$settings_key_auth_code];
+        return $prefs[self::SETTINGS_KEY_AUTH_CODE] ?? null;
     }
 
     /**
@@ -66,15 +68,15 @@ class google_func
     static function get_current_token(rcube_user $user)
     {
         $prefs = $user->get_prefs();
-        return $prefs[self::$settings_key_token];
+        return $prefs[self::SETTINGS_KEY_TOKEN] ?? null;
     }
 
-    static function save_current_token(rcube_user $user, array $token): bool
+    static function save_current_token(rcube_user $user, $token): bool
     {
-        $prefs = [self::$settings_key_token => $token];
+        $prefs = [self::SETTINGS_KEY_TOKEN => $token];
         $result = $user->save_prefs($prefs);
         if (!$result) {
-            rcube::write_log('google_addressbook', 'Failed to save current token.');
+            rcube::write_log(self::LOG_IDENT, 'Failed to save current token.');
         }
         return $result;
     }
@@ -82,13 +84,13 @@ class google_func
     static function clear_authdata(rcube_user $user): bool
     {
         $prefs = [
-            self::$settings_key_token => null,
-            self::$settings_key_auth_code => null,
-            self::$settings_key_auto_sync => false,
+            self::SETTINGS_KEY_TOKEN => null,
+            self::SETTINGS_KEY_AUTH_CODE => null,
+            self::SETTINGS_KEY_AUTO_SYNC => false,
         ];
         $result = $user->save_prefs($prefs);
         if (!$result) {
-            rcube::write_log('google_addressbook', 'Failed to clear current authdata.');
+            rcube::write_log(self::LOG_IDENT, 'Failed to clear current authdata.');
         }
         return $result;
     }
@@ -96,13 +98,13 @@ class google_func
     static function is_enabled($user): bool
     {
         $prefs = $user->get_prefs();
-        return isset($prefs[self::$settings_key_use_plugin]) && $prefs[self::$settings_key_use_plugin];
+        return isset($prefs[self::SETTINGS_KEY_USE_PLUGIN]) && $prefs[self::SETTINGS_KEY_USE_PLUGIN];
     }
 
     static function is_autosync($user): bool
     {
         $prefs = $user->get_prefs();
-        return (bool)$prefs[self::$settings_key_auto_sync];
+        return (bool)$prefs[self::SETTINGS_KEY_AUTO_SYNC];
     }
 
     static function google_authenticate(\Google\Client $client, rcube_user $user): array
@@ -148,7 +150,7 @@ class google_func
                 self::clear_authdata($user);
             }
             error_log('google_addressbook: ' . $msg);
-            rcube::write_log('google_addressbook', $msg);
+            rcube::write_log(self::LOG_IDENT, $msg);
         }
 
         if ($success) {

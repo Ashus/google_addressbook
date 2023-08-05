@@ -11,7 +11,7 @@
  */
 
 require_once(__DIR__ . '/google_addressbook_backend.php');
-require_once(__DIR__ . '/google_func.php');
+require_once(__DIR__ . '/google_addressbook_functions.php');
 
 class google_addressbook extends rcube_plugin
 {
@@ -58,22 +58,22 @@ class google_addressbook extends rcube_plugin
      */
     function get_current_token()
     {
-        return google_func::get_current_token(rcmail::get_instance()->user);
+        return google_addressbook_functions::get_current_token(rcmail::get_instance()->user);
     }
 
     function save_current_token($token): bool
     {
-        return google_func::save_current_token(rcmail::get_instance()->user, $token);
+        return google_addressbook_functions::save_current_token(rcmail::get_instance()->user, $token);
     }
 
     function is_enabled(): bool
     {
-        return google_func::is_enabled(rcmail::get_instance()->user);
+        return google_addressbook_functions::is_enabled(rcmail::get_instance()->user);
     }
 
     function is_autosync(): bool
     {
-        return google_func::is_autosync(rcmail::get_instance()->user);
+        return google_addressbook_functions::is_autosync(rcmail::get_instance()->user);
     }
 
     function handle_auth_requests()
@@ -85,13 +85,13 @@ class google_addressbook extends rcube_plugin
         }
         $auth_code = $_GET['code'];
         $user = $rcmail->user;
-        $prefs = [google_func::$settings_key_auth_code => $auth_code, google_func::$settings_key_token => null];
+        $prefs = [google_addressbook_functions::SETTINGS_KEY_AUTH_CODE => $auth_code, google_addressbook_functions::SETTINGS_KEY_TOKEN => null];
         if (!$user->save_prefs($prefs)) {
             rcmail_action::display_server_error('errorsaving');
             return;
         }
-        $client = google_func::get_client();
-        $res = google_func::google_authenticate($client, $user);
+        $client = google_addressbook_functions::get_client();
+        $res = google_addressbook_functions::google_authenticate($client, $user);
         $rcmail->output->show_message($res['message'], $res['success'] ? 'confirmation' : 'error');
     }
 
@@ -104,6 +104,7 @@ class google_addressbook extends rcube_plugin
     function preferences_list(array $params): array
     {
         $rcmail = rcmail::get_instance();
+
         if ($params['section'] == 'addressbook') {
             $params['blocks'][$this->ID]['name'] = $this->abook_name;
 
@@ -111,29 +112,33 @@ class google_addressbook extends rcube_plugin
             $checkbox = new html_checkbox(['name' => $field_id, 'id' => $field_id, 'value' => 1]);
             $params['blocks'][$this->ID]['options'][$field_id] = [
                 'title' => html::label($field_id, $this->gettext('use') . $this->abook_name),
-                'content' => $checkbox->show($rcmail->config->get(google_func::$settings_key_use_plugin))
+                'content' => $checkbox->show($rcmail->config->get(google_addressbook_functions::SETTINGS_KEY_USE_PLUGIN))
             ];
 
             $field_id = 'rc_google_autosync';
             $checkbox = new html_checkbox(['name' => $field_id, 'id' => $field_id, 'value' => 1]);
             $params['blocks'][$this->ID]['options'][$field_id] = [
                 'title' => html::label($field_id, $this->gettext('autosync')),
-                'content' => $checkbox->show($rcmail->config->get(google_func::$settings_key_auto_sync))
+                'content' => $checkbox->show($rcmail->config->get(google_addressbook_functions::SETTINGS_KEY_AUTO_SYNC))
             ];
-            $auth_link = ['target' => '_top'];
-            if (!google_func::has_redirect()) {
-                $field_id = 'rc_google_authcode';
-                $input_auth = new html_inputfield(['name' => $field_id, 'id' => $field_id, 'size' => 45]);
-                $params['blocks'][$this->ID]['options'][$field_id] = [
-                    'title' => html::label($field_id, $this->gettext('authcode')),
-                    'content' => $input_auth->show($rcmail->config->get(google_func::$settings_key_auth_code))
+
+            if (!google_addressbook_functions::get_client()->getClientId() || !google_addressbook_functions::get_client()->getClientSecret()) {
+                $params['blocks'][$this->ID]['options']['rc_google_error'] = [
+                    'title' => '',
+                    'content' => html::label('rc_google_error', $this->gettext('invalidconfiguration'))
                 ];
-                $auth_link['target'] = '_blank';
-            }
-            if (!google_func::get_client()->getClientId() || !google_func::get_client()->getClientSecret()) {
-                $params['blocks'][$this->ID]['options'][$field_id]['content'] = html::label('error', $this->gettext('invalidconfiguration'));
             } else {
-                $auth_link['href'] = google_func::get_client()->createAuthUrl();
+                $auth_link = ['target' => '_top'];
+                if (!google_addressbook_functions::has_redirect()) {
+                    $field_id = 'rc_google_authcode';
+                    $input_auth = new html_inputfield(['name' => $field_id, 'id' => $field_id, 'size' => 45]);
+                    $params['blocks'][$this->ID]['options'][$field_id] = [
+                        'title' => html::label($field_id, $this->gettext('authcode')),
+                        'content' => $input_auth->show($rcmail->config->get(google_addressbook_functions::SETTINGS_KEY_AUTH_CODE))
+                    ];
+                    $auth_link['target'] = '_blank';
+                }
+                $auth_link['href'] = google_addressbook_functions::get_client()->createAuthUrl();
                 $params['blocks'][$this->ID]['options']['link'] = [
                     'title' => html::span('', ''),
                     'content' => html::a($auth_link, $this->gettext('authcodelink'))
@@ -146,17 +151,17 @@ class google_addressbook extends rcube_plugin
     function preferences_save(array $params): array
     {
         if ($params['section'] == 'addressbook') {
-            if (!google_func::has_redirect()) {
+            if (!google_addressbook_functions::has_redirect()) {
                 $old_prefs = rcmail::get_instance()->user->get_prefs();
                 $new_code = rcube_utils::get_input_value('rc_google_authcode', rcube_utils::INPUT_POST);
-                if ($old_prefs[google_func::$settings_key_auth_code] != $new_code) {
+                if ($old_prefs[google_addressbook_functions::SETTINGS_KEY_AUTH_CODE] != $new_code) {
                     // token is no longer valid, so delete it
                     $this->save_current_token(null);
                 }
-                $params['prefs'][google_func::$settings_key_auth_code] = $new_code;
+                $params['prefs'][google_addressbook_functions::SETTINGS_KEY_AUTH_CODE] = $new_code;
             }
-            $params['prefs'][google_func::$settings_key_use_plugin] = isset($_POST['rc_use_plugin']);
-            $params['prefs'][google_func::$settings_key_auto_sync] = isset($_POST['rc_google_autosync']);
+            $params['prefs'][google_addressbook_functions::SETTINGS_KEY_USE_PLUGIN] = isset($_POST['rc_use_plugin']);
+            $params['prefs'][google_addressbook_functions::SETTINGS_KEY_AUTO_SYNC] = isset($_POST['rc_google_autosync']);
         }
         return $params;
     }
@@ -194,25 +199,25 @@ class google_addressbook extends rcube_plugin
 
         $_SESSION['google_addressbook_synced'] = true;
 
-        $res = google_func::google_sync_contacts($rcmail->user);
+        $res = google_addressbook_functions::google_sync_contacts($rcmail->user);
         $rcmail->output->show_message($res['message'], $res['success'] ? 'confirmation' : 'error');
     }
 
     function contact_create($params)
     {
-        rcube::write_log('google_addressbook', 'contact_create: ' . print_r($params, true));
+        rcube::write_log(google_addressbook_functions::LOG_IDENT, 'contact_create: uid:' . rcmail::get_instance()->user->ID . ' ' . json_encode($params, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES));
         // TODO: not supported right now
     }
 
     function contact_update($params)
     {
-        rcube::write_log('google_addressbook', 'contact_update: ' . print_r($params, true));
+        rcube::write_log(google_addressbook_functions::LOG_IDENT, 'contact_update: uid:' . rcmail::get_instance()->user->ID . ' ' . json_encode($params, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES));
         // TODO: not supported right now
     }
 
     function contact_delete($params)
     {
-        rcube::write_log('google_addressbook', 'contact_delete: ' . print_r($params, true));
+        rcube::write_log(google_addressbook_functions::LOG_IDENT, 'contact_delete: uid:' . rcmail::get_instance()->user->ID . ' ' . json_encode($params, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES));
         // TODO: not supported right now
     }
 }

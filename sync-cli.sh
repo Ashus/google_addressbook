@@ -16,7 +16,7 @@
 define('INSTALL_PATH', realpath(__DIR__ . '/../..') . '/');
 
 require_once INSTALL_PATH . 'program/include/clisetup.php';
-require_once(__DIR__ . '/google_func.php');
+require_once(__DIR__ . '/google_addressbook_functions.php');
 
 ini_set('memory_limit', -1);
 
@@ -35,8 +35,8 @@ while ($sql_result && ($sql_arr = $db->fetch_assoc($sql_result))) {
     echo "Syncing contacts for user " . $sql_arr['username'] . "... ";
 
     $user = new rcube_user($sql_arr['user_id'], $sql_arr);
-    if (google_func::is_enabled($user)) {
-        $res = google_func::google_sync_contacts($user);
+    if (google_addressbook_functions::is_enabled($user)) {
+        $res = google_addressbook_functions::google_sync_contacts($user);
         echo $res['message'] . "\n";
     } else {
         echo "disabled.\n";
