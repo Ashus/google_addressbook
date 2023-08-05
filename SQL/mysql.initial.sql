@@ -1,7 +1,7 @@
 /*!40014 SET FOREIGN_KEY_CHECKS=0 */;
 -- Table structure for table `contacts_google`
 
-CREATE TABLE `contacts_google` (
+CREATE TABLE IF NOT EXISTS `contacts_google` (
  `contact_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
  `changed` datetime NOT NULL DEFAULT '1000-01-01 00:00:00',
  `del` tinyint(1) NOT NULL DEFAULT '0',

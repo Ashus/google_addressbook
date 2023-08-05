@@ -2,7 +2,7 @@
 -- Table structure for table contacts_google
 -- 
 
-CREATE TABLE contacts_google (
+CREATE TABLE IF NOT EXISTS contacts_google (
   contact_id integer NOT NULL PRIMARY KEY,
   user_id integer NOT NULL,
   changed datetime NOT NULL default '0000-00-00 00:00:00',
