@@ -12,7 +12,7 @@ class google_addressbook_backend extends rcube_contacts
     protected $user_id;
     protected $db;
 
-    function __construct($dbconn, $user)
+    function __construct(rcube_db $dbconn, int $user)
     {
         parent::__construct($dbconn, $user);
         $this->user_id = $user;
@@ -24,7 +24,7 @@ class google_addressbook_backend extends rcube_contacts
         $this->db_name = $dbconn->table_name('contacts_google');
     }
 
-    function delete_all($with_groups = false)
+    function delete_all($with_groups = false): int
     {
         $query = "DELETE FROM $this->db_name WHERE user_id=?";
         $this->db->query($query, $this->user_id);
