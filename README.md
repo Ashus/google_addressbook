@@ -5,10 +5,10 @@ This plugin lets you sync your Google Addressbook in readonly mode with Roundcub
 *Info: Initially stwa created this plugin for Roundcube 0.8.5, but it is still working properly with the current version of Roundcube (version 1.6.0). So yes, you can still use this plugin, it's up to date!*
 
 ## Requirements
-* Roundcube >= v0.8.5 [http://roundcube.net/download]
-* PHP 5.6 or higher [http://www.php.net/]
-* PHP Curl extension [http://www.php.net/manual/en/intro.curl.php]
-* PHP JSON extension [http://php.net/manual/en/book.json.php]
+* Roundcube >= v0.8.5 [https://roundcube.net/download]
+* PHP 7.0 or higher [https://www.php.net/]
+* PHP Curl extension [https://www.php.net/manual/en/intro.curl.php]
+* PHP JSON extension [https://www.php.net/manual/en/book.json.php]
 
 ## Installation
 Use Composer 2 for installation.

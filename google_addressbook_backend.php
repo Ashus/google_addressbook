@@ -9,25 +9,25 @@
 
 class google_addressbook_backend extends rcube_contacts
 {
-  protected $user_id;
-  protected $db;
+    protected $user_id;
+    protected $db;
 
-  function __construct($dbconn, $user)
-  {
-    parent::__construct($dbconn, $user);
-    $this->user_id = $user;
-    $this->db = $dbconn;
-    $this->name = 'Google Addressbook';
-    $this->readonly = true;
-    $this->groups = false;
-    $this->undelete = false;
-    $this->db_name = $dbconn->table_name('contacts_google');
-  }
+    function __construct($dbconn, $user)
+    {
+        parent::__construct($dbconn, $user);
+        $this->user_id = $user;
+        $this->db = $dbconn;
+        $this->name = 'Google Addressbook';
+        $this->readonly = true;
+        $this->groups = false;
+        $this->undelete = false;
+        $this->db_name = $dbconn->table_name('contacts_google');
+    }
 
-  function delete_all($with_groups = false)
-  {
-    $query = "DELETE FROM $this->db_name WHERE user_id=?";
-    $this->db->query($query, $this->user_id);
-    return $this->db->affected_rows();
-  }
+    function delete_all($with_groups = false)
+    {
+        $query = "DELETE FROM $this->db_name WHERE user_id=?";
+        $this->db->query($query, $this->user_id);
+        return $this->db->affected_rows();
+    }
 }

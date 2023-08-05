@@ -26,18 +26,19 @@ $rcmail = rcmail::get_instance();
 $db = $rcmail->get_dbh();
 $db->db_connect('w');
 
-if (!$db->is_connected() || $db->is_error())
+if (!$db->is_connected() || $db->is_error()) {
     die("No DB connection\n");
+}
 
 $sql_result = $db->query("SELECT * FROM " . $db->table_name('users'));
 while ($sql_result && ($sql_arr = $db->fetch_assoc($sql_result))) {
     echo "Syncing contacts for user " . $sql_arr['username'] . "... ";
 
     $user = new rcube_user($sql_arr['user_id'], $sql_arr);
-    if(google_func::is_enabled($user)) {
-      $res = google_func::google_sync_contacts($user);
-      echo $res['message']."\n";
+    if (google_func::is_enabled($user)) {
+        $res = google_func::google_sync_contacts($user);
+        echo $res['message'] . "\n";
     } else {
-      echo "disabled.\n";
+        echo "disabled.\n";
     }
 }
